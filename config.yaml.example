@@ -1,0 +1,22 @@
+database:
+  host: your_database_host
+  port: 5432
+  name: computing_power
+  user: your_username
+  password: your_password
+
+data_generation:
+  level1_count: 1
+  ministry_bureau_count: 12
+  local_bureau_count: 20
+  ministry_dept_count: 5
+  local_dept_min: 3
+  local_dept_max: 5
+  device_min: 0
+  device_max: 4
+  days: 30
+  gpu_per_device: 8
+  initial_device_ratio: 0.3
+  device_add_prob: 0.002
+  device_remove_prob: 0.001
+  always_high_load_ratio: 0.15
