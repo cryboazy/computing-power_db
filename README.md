@@ -125,15 +125,15 @@ data_generation:
   level1_count: 1                    # 一级组织数量
   ministry_bureau_count: 12           # 部机关局数量
   local_bureau_count: 20             # 地方厅局数量
-  ministry_dept_count: 5             # 部机关局下属处室数量
-  local_dept_min: 3                  # 地方厅局下属处室最小数量
-  local_dept_max: 5                  # 地方厅局下属处室最大数量
+  ministry_dept_count: 5             # 部机关局数量
+  local_dept_min: 5                  # 地方厅局最小数量
+  local_dept_max: 10                  # 地方厅局最大数量
   device_min: 0                      # 各单位设备最小数量
-  device_max: 4                      # 各单位设备最大数量
+  device_max: 20                     # 各单位设备最大数量
   days: 30                           # 生成数据天数
   gpu_per_device: 8                  # 每台设备GPU卡数量
   initial_device_ratio: 0.3          # 初始设备比例
-  device_add_prob: 0.002             # 设备添加概率
+  device_add_prob: 0.3             # 设备添加概率
   device_remove_prob: 0.001          # 设备移除概率
   always_high_load_ratio: 0.15       # 始终高负载比例
 ```
