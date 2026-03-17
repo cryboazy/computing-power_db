@@ -178,9 +178,6 @@ OS_TYPES = [
     'Red Hat Enterprise Linux 8.6'
 ]
 
-TASK_TYPES = ['GPU性能采集', 'CPU状态采集', '内存使用采集', '磁盘IO采集', '网络流量采集', '综合状态采集']
-METRICS_OPTIONS = ['gpu_utilization,memory_usage,temperature,power', 'cpu_percent,load_average', 'virtual_memory,swap', 'disk_io,disk_usage', 'network_bytes,network_packets', 'all_metrics']
-
 BUSINESS_NETWORKS = [
     {'name': '本地部署', 'code': 'NET_LOCAL', 'parent_code': None},
     {'name': '主干网', 'code': 'NET_BACKBONE', 'parent_code': None},
@@ -448,13 +445,6 @@ def clear_all_data(conn, skip_clear=False):
         'device_memory_monitor',
         'device_disk_monitor',
         'device_network_monitor',
-        'collect_info',
-        'collect_task_detail',
-        'collect_task',
-        'daily_device_summary',
-        'daily_gpu_usage_summary',
-        'org_gpu_usage_summary',
-        'statistics_data',
         'gpu_card_info',
         'device',
         'organization',
@@ -524,18 +514,18 @@ def generate_organizations_csv(config=None):
     
     level1_org = {
         'name': '全国',
-        'code': 'ORG_NATIONWIDE',
+        'code': 'CHINA',
         'province': '北京市',
         'province_code': '110000'
     }
-    
+
     row = {
-        'id': org_id,
+        'id': 1,
         'parent_id': 0,
         'name': level1_org['name'],
         'code': level1_org['code'],
         'type': 1,
-        'sort': org_id,
+        'sort': 1,
         'leader': '部长',
         'phone': '010-12345678',
         'email': 'office@ministry.gov.cn',
@@ -547,23 +537,23 @@ def generate_organizations_csv(config=None):
     }
     org_rows.append(row)
     org_hierarchy['level1'].append({
-        'id': org_id,
+        'id': 1,
         'name': level1_org['name'],
         'code': level1_org['code'],
         'province': level1_org['province'],
         'province_code': level1_org['province_code']
     })
-    nationwide_id = org_id
-    org_id += 1
-    
-    local_bureau_category_id = org_id
+    nationwide_id = 1
+    org_id = 2
+
+    local_bureau_category_id = 2
     row = {
-        'id': org_id,
+        'id': 2,
         'parent_id': nationwide_id,
         'name': '地方厅局',
-        'code': 'ORG_LOCAL_BUREAU',
+        'code': 'LOCAL',
         'type': 2,
-        'sort': org_id,
+        'sort': 2,
         'leader': '',
         'phone': '',
         'email': '',
@@ -575,26 +565,26 @@ def generate_organizations_csv(config=None):
     }
     org_rows.append(row)
     org_hierarchy['level2'].append({
-        'id': org_id,
+        'id': 2,
         'parent_id': nationwide_id,
         'name': '地方厅局',
-        'code': 'ORG_LOCAL_BUREAU',
+        'code': 'LOCAL',
         'province': '北京市',
         'province_code': '110000',
         'level1_id': nationwide_id,
         'level1_name': level1_org['name'],
         'org_category': 'local_bureau_category'
     })
-    org_id += 1
-    
-    ministry_category_id = org_id
+    org_id = 3
+
+    ministry_category_id = 7
     row = {
-        'id': org_id,
+        'id': 7,
         'parent_id': nationwide_id,
         'name': '部机关',
-        'code': 'ORG_MINISTRY',
+        'code': 'MINISTRY',
         'type': 2,
-        'sort': org_id,
+        'sort': 7,
         'leader': '',
         'phone': '',
         'email': '',
@@ -606,26 +596,27 @@ def generate_organizations_csv(config=None):
     }
     org_rows.append(row)
     org_hierarchy['level2'].append({
-        'id': org_id,
+        'id': 7,
         'parent_id': nationwide_id,
         'name': '部机关',
-        'code': 'ORG_MINISTRY',
+        'code': 'MINISTRY',
         'province': '北京市',
         'province_code': '110000',
         'level1_id': nationwide_id,
         'level1_name': level1_org['name'],
         'org_category': 'ministry_category'
     })
-    org_id += 1
-    
+    org_id = 8
+
     num_local_bureaus = min(config['local_bureau_count'], len(PROVINCES) - 1)
-    for province in PROVINCES[1:1+num_local_bureaus]:
+    for idx, province in enumerate(PROVINCES[1:1+num_local_bureaus], 1):
         province_name_short = province['name'].replace('省', '').replace('市', '')
+        org_code = f"A{idx:02d}"
         row = {
             'id': org_id,
             'parent_id': local_bureau_category_id,
             'name': f"{province['name']}XX厅",
-            'code': f"ORG_PROVINCE_{province['code']}",
+            'code': org_code,
             'type': 3,
             'sort': org_id,
             'leader': f"厅长{random.randint(1, 10)}",
@@ -642,7 +633,7 @@ def generate_organizations_csv(config=None):
             'id': org_id,
             'parent_id': local_bureau_category_id,
             'name': row['name'],
-            'code': row['code'],
+            'code': org_code,
             'province': province['name'],
             'province_code': province['code'],
             'level1_id': nationwide_id,
@@ -654,40 +645,41 @@ def generate_organizations_csv(config=None):
         org_id += 1
     
     ministry_bureaus = [
-        {'name': '科技发展局', 'code': 'BUREAU_TECH'},
-        {'name': '规划发展局', 'code': 'BUREAU_PLAN'},
-        {'name': '产业发展局', 'code': 'BUREAU_INDUSTRY'},
-        {'name': '信息化推进局', 'code': 'BUREAU_INFO'},
-        {'name': '政策法规局', 'code': 'BUREAU_POLICY'},
-        {'name': '国际合作局', 'code': 'BUREAU_INTL'},
-        {'name': '财务审计局', 'code': 'BUREAU_FINANCE'},
-        {'name': '人事教育局', 'code': 'BUREAU_HR'},
-        {'name': '综合管理局', 'code': 'BUREAU_GENERAL'},
-        {'name': '数据资源局', 'code': 'BUREAU_DATA'},
-        {'name': '网络安全局', 'code': 'BUREAU_SECURITY'},
-        {'name': '标准规范局', 'code': 'BUREAU_STANDARD'},
-        {'name': '运行监测局', 'code': 'BUREAU_MONITOR'},
-        {'name': '创新应用局', 'code': 'BUREAU_INNOVATION'},
-        {'name': '基础设施局', 'code': 'BUREAU_INFRA'},
-        {'name': '质量监督局', 'code': 'BUREAU_QUALITY'},
-        {'name': '服务管理局', 'code': 'BUREAU_SERVICE'},
-        {'name': '评估考核局', 'code': 'BUREAU_ASSESS'},
-        {'name': '培训发展局', 'code': 'BUREAU_TRAINING'},
-        {'name': '交流合作局', 'code': 'BUREAU_EXCHANGE'},
+        {'name': '科技发展局'},
+        {'name': '规划发展局'},
+        {'name': '产业发展局'},
+        {'name': '信息化推进局'},
+        {'name': '政策法规局'},
+        {'name': '国际合作局'},
+        {'name': '财务审计局'},
+        {'name': '人事教育局'},
+        {'name': '综合管理局'},
+        {'name': '数据资源局'},
+        {'name': '网络安全局'},
+        {'name': '标准规范局'},
+        {'name': '运行监测局'},
+        {'name': '创新应用局'},
+        {'name': '基础设施局'},
+        {'name': '质量监督局'},
+        {'name': '服务管理局'},
+        {'name': '评估考核局'},
+        {'name': '培训发展局'},
+        {'name': '交流合作局'},
     ]
-    
+
     num_ministry_bureaus = min(config['ministry_bureau_count'], len(ministry_bureaus))
-    for bureau in ministry_bureaus[:num_ministry_bureaus]:
+    for idx, bureau in enumerate(ministry_bureaus[:num_ministry_bureaus], 1):
+        org_code = f"B{idx:02d}"
         row = {
             'id': org_id,
             'parent_id': ministry_category_id,
             'name': bureau['name'],
-            'code': f"ORG_{bureau['code']}",
+            'code': org_code,
             'type': 3,
             'sort': org_id,
             'leader': f"局长{random.randint(1, 10)}",
             'phone': f"010-{random.randint(10000000, 99999999)}",
-            'email': f"{bureau['code'].lower()}@ministry.gov.cn",
+            'email': f"bureau{idx}@ministry.gov.cn",
             'address': '北京市西城区XX路XX号',
             'status': 1,
             'remark': '三级组织-部机关局',
@@ -699,7 +691,7 @@ def generate_organizations_csv(config=None):
             'id': org_id,
             'parent_id': ministry_category_id,
             'name': bureau['name'],
-            'code': row['code'],
+            'code': org_code,
             'province': '北京市',
             'province_code': '110000',
             'level1_id': nationwide_id,
@@ -1426,282 +1418,6 @@ def generate_monitoring_data_csv(devices, days=30, config=None):
     print(f"  - 网络监控数据: {len(network_monitor_rows)} 条")
 
 
-def generate_collect_tasks_csv(devices, days=30):
-    print("正在生成采集任务数据到CSV...")
-    
-    task_rows = []
-    task_detail_rows = []
-    task_id = 1
-    task_detail_id = 1
-    
-    end_time = datetime.now().replace(second=0, microsecond=0)
-    start_time = end_time - timedelta(days=days)
-    
-    current_time = start_time
-    while current_time <= end_time:
-        for device in devices:
-            if random.random() < 0.1:
-                task_type = random.choice(TASK_TYPES)
-                status = random.choices([0, 1, 2, 3], weights=[10, 20, 60, 10])[0]
-                
-                scheduled_time = current_time + timedelta(minutes=random.randint(0, 30))
-                start_time_task = scheduled_time + timedelta(seconds=random.randint(0, 10))
-                duration = random.randint(30, 300)
-                end_time_task = start_time_task + timedelta(seconds=duration)
-                
-                task_rows.append({
-                    'id': task_id,
-                    'task_name': f"{task_type}-{device['device_code']}-{current_time.strftime('%Y%m%d%H%M')}",
-                    'description': f"对设备 {device['device_code']} 执行 {task_type}",
-                    'task_type': task_type,
-                    'target_id': str(device['id']),
-                    'target_name': device['org_name'],
-                    'metrics': random.choice(METRICS_OPTIONS),
-                    'status': status,
-                    'cron_expression': '0 */5 * * * ?' if random.random() < 0.3 else None,
-                    'scheduled_time': scheduled_time.strftime('%Y-%m-%d %H:%M:%S'),
-                    'start_time': start_time_task.strftime('%Y-%m-%d %H:%M:%S') if status >= 1 else None,
-                    'end_time': end_time_task.strftime('%Y-%m-%d %H:%M:%S') if status >= 2 else None,
-                    'duration': duration if status >= 2 else None,
-                    'data_count': random.randint(100, 1000) if status == 2 else None,
-                    'result': 'SUCCESS' if status == 2 else ('FAILED' if status == 3 else None),
-                    'error_msg': 'Connection timeout' if status == 3 else None,
-                    'retry_count': random.randint(0, 2) if status == 3 else 0,
-                    'max_retry_count': 3,
-                    'create_by': 'system',
-                    'create_by_id': 1,
-                    'update_by': 'system',
-                    'update_by_id': 1,
-                    'create_time': current_time.strftime('%Y-%m-%d %H:%M:%S'),
-                    'update_time': current_time.strftime('%Y-%m-%d %H:%M:%S'),
-                    'deleted': 0,
-                    'version': 0
-                })
-                
-                if status == 2:
-                    task_detail_rows.append({
-                        'id': task_detail_id,
-                        'task_info_id': task_id,
-                        'detail_id': str(uuid.uuid4()),
-                        'organization_id': device['org_id'],
-                        'organization_code': device['org_code'],
-                        'file_name': f"collect_{device['device_code']}_{current_time.strftime('%Y%m%d%H%M%S')}.json",
-                        'import_time': end_time_task.strftime('%Y-%m-%d %H:%M:%S'),
-                        'status': 1,
-                        'remark': '数据采集成功',
-                        'record_count': random.randint(100, 1000),
-                        'create_time': end_time_task.strftime('%Y-%m-%d %H:%M:%S'),
-                        'update_time': end_time_task.strftime('%Y-%m-%d %H:%M:%S'),
-                        'create_by': 'system',
-                        'update_by': 'system',
-                        'deleted': 0
-                    })
-                    task_detail_id += 1
-                
-                task_id += 1
-        
-        current_time += timedelta(hours=1)
-    
-    csv_path = os.path.join(DATA_DIR, 'collect_task.csv')
-    with open(csv_path, 'w', newline='', encoding='utf-8') as f:
-        fieldnames = ['id', 'task_name', 'description', 'task_type', 'target_id', 'target_name', 'metrics', 'status', 'cron_expression', 'scheduled_time', 'start_time', 'end_time', 'duration', 'data_count', 'result', 'error_msg', 'retry_count', 'max_retry_count', 'create_by', 'create_by_id', 'update_by', 'update_by_id', 'create_time', 'update_time', 'deleted', 'version']
-        writer = csv.DictWriter(f, fieldnames=fieldnames)
-        writer.writeheader()
-        writer.writerows(task_rows)
-    print(f"  - 已生成 {len(task_rows)} 条采集任务数据到 {csv_path}")
-    
-    csv_path = os.path.join(DATA_DIR, 'collect_task_detail.csv')
-    with open(csv_path, 'w', newline='', encoding='utf-8') as f:
-        fieldnames = ['id', 'task_info_id', 'detail_id', 'organization_id', 'organization_code', 'file_name', 'import_time', 'status', 'remark', 'record_count', 'create_time', 'update_time', 'create_by', 'update_by', 'deleted']
-        writer = csv.DictWriter(f, fieldnames=fieldnames)
-        writer.writeheader()
-        writer.writerows(task_detail_rows)
-    print(f"  - 已生成 {len(task_detail_rows)} 条采集任务明细数据到 {csv_path}")
-
-
-def generate_summary_data_csv(devices, days=30):
-    print("正在生成汇总数据到CSV...")
-    
-    daily_device_rows = []
-    daily_gpu_rows = []
-    org_gpu_rows = []
-    statistics_rows = []
-    
-    end_date = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
-    start_date = end_date - timedelta(days=days)
-    
-    daily_device_id = 1
-    daily_gpu_id = 1
-    org_gpu_id = 1
-    statistics_id = 1
-    
-    current_date = start_date
-    while current_date < end_date:
-        device_gpu_data = {}
-        
-        for device in devices:
-            base_gpu_util = random.uniform(30, 70)
-            daily_device_rows.append({
-                'id': daily_device_id,
-                'device_id': device['id'],
-                'device_name': device['org_name'],
-                'organization_id1': device['level1_id'],
-                'organization_name1': device['level1_name'],
-                'organization_id2': device['level2_id'],
-                'organization_name2': device['level2_name'],
-                'organization_id3': device['org_id'],
-                'organization_name3': device['org_name'],
-                'province_code': device['province_code'],
-                'province': device['province'],
-                'avg_gpu_usage_rate': round(base_gpu_util + random.uniform(-10, 10), 2),
-                'summary_date': current_date.strftime('%Y-%m-%d %H:%M:%S')
-            })
-            daily_device_id += 1
-            
-            if device['org_id'] not in device_gpu_data:
-                device_gpu_data[device['org_id']] = {
-                    'device': device,
-                    'gpu_utils': [],
-                    'mem_utils': []
-                }
-            device_gpu_data[device['org_id']]['gpu_utils'].append(base_gpu_util)
-        
-        all_gpu_utils = []
-        all_mem_utils = []
-        for device in devices:
-            gpu_util = random.uniform(30, 70)
-            mem_util = random.uniform(40, 70)
-            all_gpu_utils.append(gpu_util)
-            all_mem_utils.append(mem_util)
-        
-        total_gpu_count = sum(d.get('gpu_per_device', 8) for d in devices)
-        
-        daily_gpu_rows.append({
-            'id': daily_gpu_id,
-            'summary_date': current_date.strftime('%Y-%m-%d %H:%M:%S'),
-            'total_device_count': len(devices),
-            'total_gpu_count': total_gpu_count,
-            'avg_gpu_usage_rate': round(sum(all_gpu_utils) / len(all_gpu_utils), 2),
-            'max_gpu_usage_rate': round(max(all_gpu_utils), 2),
-            'min_gpu_usage_rate': round(min(all_gpu_utils), 2),
-            'avg_memory_usage_rate': round(sum(all_mem_utils) / len(all_mem_utils), 2),
-            'max_memory_usage_rate': round(max(all_mem_utils), 2),
-            'min_memory_usage_rate': round(min(all_mem_utils), 2),
-            'avg_temperature': round(random.uniform(55, 70), 2),
-            'max_temperature': round(random.uniform(75, 85), 2),
-            'memory_total_gb': sum(d['gpu_model']['memory_gb'] * d.get('gpu_per_device', 8) for d in devices),
-            'compute_total_tflops': sum(d['gpu_model']['tflops_fp32'] * d.get('gpu_per_device', 8) for d in devices),
-            'total_sample_count': len(devices) * 1440,
-            'total_gpu_rate_sum': int(sum(all_gpu_utils) * 1440)
-        })
-        daily_gpu_id += 1
-        
-        org_data = {}
-        for device in devices:
-            org_id = device['org_id']
-            gpu_per_device = device.get('gpu_per_device', 8)
-            if org_id not in org_data:
-                org_data[org_id] = {
-                    'device': device,
-                    'device_count': 0,
-                    'gpu_count': 0,
-                    'gpu_utils': [],
-                    'mem_utils': []
-                }
-            org_data[org_id]['device_count'] += 1
-            org_data[org_id]['gpu_count'] += gpu_per_device
-            org_data[org_id]['gpu_utils'].append(random.uniform(30, 70))
-            org_data[org_id]['mem_utils'].append(random.uniform(40, 70))
-        
-        for org_id, data in org_data.items():
-            device = data['device']
-            org_gpu_rows.append({
-                'id': org_gpu_id,
-                'organization_id1': device['level1_id'],
-                'organization_name1': device['level1_name'],
-                'organization_id2': device['level2_id'],
-                'organization_name2': device['level2_name'],
-                'organization_id3': device['org_id'],
-                'organization_name3': device['org_name'],
-                'organization_code3': device['org_code'],
-                'province_code': device['province_code'],
-                'province': device['province'],
-                'device_count': data['device_count'],
-                'gpu_count': data['gpu_count'],
-                'avg_gpu_usage_rate': round(sum(data['gpu_utils']) / len(data['gpu_utils']), 2),
-                'avg_memory_usage_rate': round(sum(data['mem_utils']) / len(data['mem_utils']), 2),
-                'max_gpu_usage_rate': round(max(data['gpu_utils']), 2),
-                'min_gpu_usage_rate': round(min(data['gpu_utils']), 2),
-                'latest_collection_time': current_date.strftime('%Y-%m-%d %H:%M:%S'),
-                'summary_time': current_date.strftime('%Y-%m-%d %H:%M:%S')
-            })
-            org_gpu_id += 1
-        
-        for hour in range(24):
-            statistics_rows.append({
-                'id': statistics_id,
-                'stat_time': current_date.replace(hour=hour).strftime('%Y-%m-%d %H:%M:%S'),
-                'stat_date': current_date.strftime('%Y-%m-%d %H:%M:%S'),
-                'stat_hour': hour,
-                'stat_minute': 0,
-                'stat_type': 'ALL',
-                'device_id': None,
-                'device_code': None,
-                'device_total': len(devices),
-                'memory_total_gb': sum(d['gpu_model']['memory_gb'] * d.get('gpu_per_device', 8) for d in devices),
-                'memory_used_gb': round(sum(d['gpu_model']['memory_gb'] * d.get('gpu_per_device', 8) for d in devices) * random.uniform(0.4, 0.7), 2),
-                'memory_free_gb': round(sum(d['gpu_model']['memory_gb'] * d.get('gpu_per_device', 8) for d in devices) * random.uniform(0.3, 0.6), 2),
-                'memory_usage_rate': round(random.uniform(40, 70), 2),
-                'compute_total_tflops': sum(d['gpu_model']['tflops_fp32'] * d.get('gpu_per_device', 8) for d in devices),
-                'compute_used_tflops': round(sum(d['gpu_model']['tflops_fp32'] * d.get('gpu_per_device', 8) for d in devices) * random.uniform(0.3, 0.6), 2),
-                'compute_free_tflops': round(sum(d['gpu_model']['tflops_fp32'] * d.get('gpu_per_device', 8) for d in devices) * random.uniform(0.4, 0.7), 2),
-                'avg_gpu_utilization': round(random.uniform(30, 70), 2),
-                'avg_temperature': round(random.uniform(55, 70), 2),
-                'virtual_percent': round(random.uniform(40, 70), 2),
-                'cpu_percent': round(random.uniform(20, 60), 2),
-                'overall_usage_rate': round(random.uniform(35, 65), 2),
-                'gpu_total_count': total_gpu_count,
-                'task_running_count': random.randint(10, 50),
-                'task_pending_count': random.randint(5, 20),
-                'task_completed_count': random.randint(100, 500)
-            })
-            statistics_id += 1
-        
-        current_date += timedelta(days=1)
-    
-    csv_path = os.path.join(DATA_DIR, 'daily_device_summary.csv')
-    with open(csv_path, 'w', newline='', encoding='utf-8') as f:
-        fieldnames = ['id', 'device_id', 'device_name', 'organization_id1', 'organization_name1', 'organization_id2', 'organization_name2', 'organization_id3', 'organization_name3', 'province_code', 'province', 'avg_gpu_usage_rate', 'summary_date']
-        writer = csv.DictWriter(f, fieldnames=fieldnames)
-        writer.writeheader()
-        writer.writerows(daily_device_rows)
-    print(f"  - 已生成 {len(daily_device_rows)} 条设备日汇总数据到 {csv_path}")
-    
-    csv_path = os.path.join(DATA_DIR, 'daily_gpu_usage_summary.csv')
-    with open(csv_path, 'w', newline='', encoding='utf-8') as f:
-        fieldnames = ['id', 'summary_date', 'total_device_count', 'total_gpu_count', 'avg_gpu_usage_rate', 'max_gpu_usage_rate', 'min_gpu_usage_rate', 'avg_memory_usage_rate', 'max_memory_usage_rate', 'min_memory_usage_rate', 'avg_temperature', 'max_temperature', 'memory_total_gb', 'compute_total_tflops', 'total_sample_count', 'total_gpu_rate_sum']
-        writer = csv.DictWriter(f, fieldnames=fieldnames)
-        writer.writeheader()
-        writer.writerows(daily_gpu_rows)
-    print(f"  - 已生成 {len(daily_gpu_rows)} 条GPU日汇总数据到 {csv_path}")
-    
-    csv_path = os.path.join(DATA_DIR, 'org_gpu_usage_summary.csv')
-    with open(csv_path, 'w', newline='', encoding='utf-8') as f:
-        fieldnames = ['id', 'organization_id1', 'organization_name1', 'organization_id2', 'organization_name2', 'organization_id3', 'organization_name3', 'organization_code3', 'province_code', 'province', 'device_count', 'gpu_count', 'avg_gpu_usage_rate', 'avg_memory_usage_rate', 'max_gpu_usage_rate', 'min_gpu_usage_rate', 'latest_collection_time', 'summary_time']
-        writer = csv.DictWriter(f, fieldnames=fieldnames)
-        writer.writeheader()
-        writer.writerows(org_gpu_rows)
-    print(f"  - 已生成 {len(org_gpu_rows)} 条组织GPU汇总数据到 {csv_path}")
-    
-    csv_path = os.path.join(DATA_DIR, 'statistics_data.csv')
-    with open(csv_path, 'w', newline='', encoding='utf-8') as f:
-        fieldnames = ['id', 'stat_time', 'stat_date', 'stat_hour', 'stat_minute', 'stat_type', 'device_id', 'device_code', 'device_total', 'memory_total_gb', 'memory_used_gb', 'memory_free_gb', 'memory_usage_rate', 'compute_total_tflops', 'compute_used_tflops', 'compute_free_tflops', 'avg_gpu_utilization', 'avg_temperature', 'virtual_percent', 'cpu_percent', 'overall_usage_rate', 'gpu_total_count', 'task_running_count', 'task_pending_count', 'task_completed_count']
-        writer = csv.DictWriter(f, fieldnames=fieldnames)
-        writer.writeheader()
-        writer.writerows(statistics_rows)
-    print(f"  - 已生成 {len(statistics_rows)} 条统计数据到 {csv_path}")
-
-
 def load_csv_to_table(conn, table_name, csv_filename, columns):
     csv_path = os.path.join(DATA_DIR, csv_filename)
     if not os.path.exists(csv_path):
@@ -1858,24 +1574,6 @@ def load_all_data_to_db(conn):
     
     load_csv_to_table(conn, 'device_network_monitor', 'device_network_monitor.csv',
                       ['id', 'device_id', 'msg_id', 'organization_id1', 'organization_name1', 'organization_id2', 'organization_name2', 'organization_id3', 'organization_name3', 'cumulative_bytes_sent', 'cumulative_bytes_recv', 'cumulative_packets_sent', 'cumulative_packets_recv', 'cumulative_errin', 'cumulative_errout', 'cumulative_dropin', 'cumulative_dropout', 'bytes_recv_per_sec', 'bytes_sent_per_sec', 'packets_recv_per_sec', 'packets_sent_per_sec', 'errin_per_sec', 'errout_per_sec', 'dropin_per_sec', 'dropout_per_sec', 'download_speed_mbps', 'upload_speed_mbps', 'download_speed_kbps', 'upload_speed_kbps', 'collection_timestamp'])
-    
-    load_csv_to_table(conn, 'collect_task', 'collect_task.csv',
-                      ['id', 'task_name', 'description', 'task_type', 'target_id', 'target_name', 'metrics', 'status', 'cron_expression', 'scheduled_time', 'start_time', 'end_time', 'duration', 'data_count', 'result', 'error_msg', 'retry_count', 'max_retry_count', 'create_by', 'create_by_id', 'update_by', 'update_by_id', 'create_time', 'update_time', 'deleted', 'version'])
-    
-    load_csv_to_table(conn, 'collect_task_detail', 'collect_task_detail.csv',
-                      ['id', 'task_info_id', 'detail_id', 'organization_id', 'organization_code', 'file_name', 'import_time', 'status', 'remark', 'record_count', 'create_time', 'update_time', 'create_by', 'update_by', 'deleted'])
-    
-    load_csv_to_table(conn, 'daily_device_summary', 'daily_device_summary.csv',
-                      ['id', 'device_id', 'device_name', 'organization_id1', 'organization_name1', 'organization_id2', 'organization_name2', 'organization_id3', 'organization_name3', 'province_code', 'province', 'avg_gpu_usage_rate', 'summary_date'])
-    
-    load_csv_to_table(conn, 'daily_gpu_usage_summary', 'daily_gpu_usage_summary.csv',
-                      ['id', 'summary_date', 'total_device_count', 'total_gpu_count', 'avg_gpu_usage_rate', 'max_gpu_usage_rate', 'min_gpu_usage_rate', 'avg_memory_usage_rate', 'max_memory_usage_rate', 'min_memory_usage_rate', 'avg_temperature', 'max_temperature', 'memory_total_gb', 'compute_total_tflops', 'total_sample_count', 'total_gpu_rate_sum'])
-    
-    load_csv_to_table(conn, 'org_gpu_usage_summary', 'org_gpu_usage_summary.csv',
-                      ['id', 'organization_id1', 'organization_name1', 'organization_id2', 'organization_name2', 'organization_id3', 'organization_name3', 'organization_code3', 'province_code', 'province', 'device_count', 'gpu_count', 'avg_gpu_usage_rate', 'avg_memory_usage_rate', 'max_gpu_usage_rate', 'min_gpu_usage_rate', 'latest_collection_time', 'summary_time'])
-    
-    load_csv_to_table(conn, 'statistics_data', 'statistics_data.csv',
-                      ['id', 'stat_time', 'stat_date', 'stat_hour', 'stat_minute', 'stat_type', 'device_id', 'device_code', 'device_total', 'memory_total_gb', 'memory_used_gb', 'memory_free_gb', 'memory_usage_rate', 'compute_total_tflops', 'compute_used_tflops', 'compute_free_tflops', 'avg_gpu_utilization', 'avg_temperature', 'virtual_percent', 'cpu_percent', 'overall_usage_rate', 'gpu_total_count', 'task_running_count', 'task_pending_count', 'task_completed_count'])
 
 
 def verify_data(conn):
@@ -1893,12 +1591,6 @@ def verify_data(conn):
         ('device_memory_monitor', '内存监控'),
         ('device_disk_monitor', '磁盘监控'),
         ('device_network_monitor', '网络监控'),
-        ('collect_task', '采集任务'),
-        ('collect_task_detail', '采集任务明细'),
-        ('daily_device_summary', '设备日汇总'),
-        ('daily_gpu_usage_summary', 'GPU日汇总'),
-        ('org_gpu_usage_summary', '组织GPU汇总'),
-        ('statistics_data', '统计数据')
     ]
     
     print("\n数据统计:")
@@ -2025,8 +1717,6 @@ def main():
             devices = generate_devices_csv(org_hierarchy, network_list, config)
             generate_gpu_cards_csv(devices)
             generate_monitoring_data_csv(devices, config['days'], config)
-            generate_collect_tasks_csv(devices, config['days'])
-            generate_summary_data_csv(devices, config['days'])
             print("\nCSV数据生成完成!")
             print(f"文件保存在: {os.path.abspath(DATA_DIR)}")
             
@@ -2055,8 +1745,6 @@ def main():
             devices = generate_devices_csv(org_hierarchy, network_list, config)
             generate_gpu_cards_csv(devices)
             generate_monitoring_data_csv(devices, config['days'], config)
-            generate_collect_tasks_csv(devices, config['days'])
-            generate_summary_data_csv(devices, config['days'])
             
             print("\n阶段2: 加载数据到数据库")
             print("-" * 40)
